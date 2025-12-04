@@ -21,6 +21,8 @@ type Format interface {
 func DetectFromFilename(name string) (Format, error) {
 	m := map[string]Format{
 		"srt": srtFormat{},
+		"ass": assFormat{},
+		"ssa": assFormat{},
 	}
 
 	ext := normalizeExt(filepath.Ext(name))
