@@ -53,3 +53,51 @@ func (s Subtitle) Stretch(factor float64, anchor time.Duration) Subtitle {
 	}
 	return out
 }
+
+// TrimFirst removes the first n events.
+func (s Subtitle) TrimFirst(n int) Subtitle {
+	if n <= 0 {
+		return s
+	}
+	if n >= len(s.Events) {
+		return Subtitle{}
+	}
+	out := Subtitle{Events: make([]Event, len(s.Events)-n)}
+	copy(out.Events, s.Events[n:])
+	return out
+}
+
+// TrimLast removes the last n events.
+func (s Subtitle) TrimLast(n int) Subtitle {
+	if n <= 0 {
+		return s
+	}
+	if n >= len(s.Events) {
+		return Subtitle{}
+	}
+	out := Subtitle{Events: make([]Event, len(s.Events)-n)}
+	copy(out.Events, s.Events[:len(s.Events)-n])
+	return out
+}
+
+// TrimBefore removes all events that start before the given timestamp.
+func (s Subtitle) TrimBefore(t time.Duration) Subtitle {
+	var events []Event
+	for _, e := range s.Events {
+		if e.Start >= t {
+			events = append(events, e)
+		}
+	}
+	return Subtitle{Events: events}
+}
+
+// TrimAfter removes all events that start after the given timestamp.
+func (s Subtitle) TrimAfter(t time.Duration) Subtitle {
+	var events []Event
+	for _, e := range s.Events {
+		if e.Start <= t {
+			events = append(events, e)
+		}
+	}
+	return Subtitle{Events: events}
+}
