@@ -3,6 +3,7 @@ package formats
 import (
 	"errors"
 	"io"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -47,6 +48,38 @@ func DecodeFrom(r io.Reader, f Format) (subtitle.Subtitle, error) {
 		return subtitle.Subtitle{}, errors.New("format is nil")
 	}
 	return f.Decode(r)
+}
+
+// Load reads a subtitle file, detecting format from the filename extension.
+func Load(filename string) (subtitle.Subtitle, error) {
+	format, err := DetectFromFilename(filename)
+	if err != nil {
+		return subtitle.Subtitle{}, err
+	}
+
+	file, err := os.Open(filename)
+	if err != nil {
+		return subtitle.Subtitle{}, err
+	}
+	defer file.Close()
+
+	return format.Decode(file)
+}
+
+// Save writes a subtitle to a file, detecting format from the filename extension.
+func Save(filename string, s subtitle.Subtitle) error {
+	format, err := DetectFromFilename(filename)
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Create(filename)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	return format.Encode(file, s)
 }
 
 func normalizeExt(ext string) string {

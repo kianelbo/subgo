@@ -11,6 +11,8 @@ import (
 	"subgo/subtitle"
 )
 
+// Note: os is still used for os.Exit and os.Stderr
+
 var (
 	outputFile  string
 	shiftAmount time.Duration
@@ -59,43 +61,18 @@ func init() {
 func run(cmd *cobra.Command, args []string) error {
 	inputFile := args[0]
 
-	// Detect input format
-	inFormat, err := formats.DetectFromFilename(inputFile)
+	// Load subtitle file
+	sub, err := formats.Load(inputFile)
 	if err != nil {
-		return fmt.Errorf("could not detect input format: %w", err)
-	}
-
-	// Open and decode input
-	inFile, err := os.Open(inputFile)
-	if err != nil {
-		return fmt.Errorf("open input: %w", err)
-	}
-	defer inFile.Close()
-
-	sub, err := formats.DecodeFrom(inFile, inFormat)
-	if err != nil {
-		return fmt.Errorf("decode: %w", err)
+		return fmt.Errorf("load: %w", err)
 	}
 
 	// Apply operations
 	sub = applyOperations(sub)
 
-	// Detect output format
-	outFormat, err := formats.DetectFromFilename(outputFile)
-	if err != nil {
-		// Fall back to input format
-		outFormat = inFormat
-	}
-
-	// Create and encode output
-	outFile, err := os.Create(outputFile)
-	if err != nil {
-		return fmt.Errorf("create output: %w", err)
-	}
-	defer outFile.Close()
-
-	if err := formats.EncodeTo(outFile, sub, outFormat); err != nil {
-		return fmt.Errorf("encode: %w", err)
+	// Save subtitle file
+	if err := formats.Save(outputFile, sub); err != nil {
+		return fmt.Errorf("save: %w", err)
 	}
 
 	return nil
