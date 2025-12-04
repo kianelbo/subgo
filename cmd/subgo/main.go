@@ -1,0 +1,106 @@
+package main
+
+import (
+	"fmt"
+	"os"
+	"time"
+
+	"github.com/spf13/cobra"
+
+	"subgo/formats"
+	"subgo/subtitle"
+)
+
+var (
+	outputFile  string
+	shiftAmount time.Duration
+	stretch     float64
+	clamp       bool
+)
+
+func main() {
+	if err := rootCmd.Execute(); err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		os.Exit(1)
+	}
+}
+
+var rootCmd = &cobra.Command{
+	Use:   "subgo <input-file>",
+	Short: "A tool for working with subtitle files",
+	Long: `subgo is a CLI tool for processing subtitle files.
+It can perform various operations on subtitle files and conversion between formats.
+
+Examples:
+  subgo input.srt --shift 300ms --output output.srt
+  subgo input.srt --shift -1s --stretch 1.05
+  subgo input.ass --output output.srt`,
+	Args: cobra.ExactArgs(1),
+	RunE: run,
+}
+
+func init() {
+	rootCmd.Flags().StringVarP(&outputFile, "output", "o", "output.srt", "output subtitle file")
+	rootCmd.Flags().DurationVarP(&shiftAmount, "shift", "s", 0, "shift amount (e.g., 300ms, 2s, -1s500ms)")
+	rootCmd.Flags().Float64VarP(&stretch, "stretch", "t", 1.0, "stretch factor (e.g., 1.05 for 5% longer)")
+	rootCmd.Flags().BoolVarP(&clamp, "clamp", "c", true, "clamp negative times to zero")
+}
+
+func run(cmd *cobra.Command, args []string) error {
+	inputFile := args[0]
+
+	// Detect input format
+	inFormat, err := formats.DetectFromFilename(inputFile)
+	if err != nil {
+		return fmt.Errorf("could not detect input format: %w", err)
+	}
+
+	// Open and decode input
+	inFile, err := os.Open(inputFile)
+	if err != nil {
+		return fmt.Errorf("open input: %w", err)
+	}
+	defer inFile.Close()
+
+	sub, err := formats.DecodeFrom(inFile, inFormat)
+	if err != nil {
+		return fmt.Errorf("decode: %w", err)
+	}
+
+	// Apply operations
+	sub = applyOperations(sub)
+
+	// Detect output format
+	outFormat, err := formats.DetectFromFilename(outputFile)
+	if err != nil {
+		// Fall back to input format
+		outFormat = inFormat
+	}
+
+	// Create and encode output
+	outFile, err := os.Create(outputFile)
+	if err != nil {
+		return fmt.Errorf("create output: %w", err)
+	}
+	defer outFile.Close()
+
+	if err := formats.EncodeTo(outFile, sub, outFormat); err != nil {
+		return fmt.Errorf("encode: %w", err)
+	}
+
+	return nil
+}
+
+func applyOperations(sub subtitle.Subtitle) subtitle.Subtitle {
+	// Apply shift if specified
+	if shiftAmount != 0 {
+		sub = sub.Shift(shiftAmount, clamp)
+	}
+
+	// Apply stretch if not 1.0
+	if stretch != 1.0 {
+		sub = sub.Stretch(stretch, 0)
+	}
+
+	return sub
+}
