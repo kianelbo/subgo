@@ -7,6 +7,7 @@
 .DS_Store
 __MACOSX/
 ._*
+Thumbs.db
 
 # Code coverage profiles and other test artifacts
 *.out
@@ -21,3 +22,5 @@ go.work.sum
 # Editor/IDE
 .idea/
 .vscode/
+*.swp
+*.swo
