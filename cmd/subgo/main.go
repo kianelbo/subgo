@@ -3,15 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
+	"subgo"
 	"time"
 
 	"github.com/spf13/cobra"
-
-	"subgo/formats"
-	"subgo/subtitle"
 )
-
-// Note: os is still used for os.Exit and os.Stderr
 
 var (
 	outputFile  string
@@ -62,7 +58,7 @@ func run(cmd *cobra.Command, args []string) error {
 	inputFile := args[0]
 
 	// Load subtitle file
-	sub, err := formats.Load(inputFile)
+	sub, err := subgo.Load(inputFile)
 	if err != nil {
 		return fmt.Errorf("load: %w", err)
 	}
@@ -71,14 +67,14 @@ func run(cmd *cobra.Command, args []string) error {
 	sub = applyOperations(sub)
 
 	// Save subtitle file
-	if err := formats.Save(outputFile, sub); err != nil {
+	if err := sub.Save(outputFile); err != nil {
 		return fmt.Errorf("save: %w", err)
 	}
 
 	return nil
 }
 
-func applyOperations(sub subtitle.Subtitle) subtitle.Subtitle {
+func applyOperations(sub subgo.Subtitle) subgo.Subtitle {
 	// Apply trimming first (before other operations)
 	if trimFirst > 0 {
 		sub = sub.TrimFirst(trimFirst)

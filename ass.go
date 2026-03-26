@@ -1,4 +1,4 @@
-package formats
+package subgo
 
 import (
 	"bufio"
@@ -8,8 +8,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"subgo/subtitle"
 )
 
 // assFormat implements the ASS/SSA subtitle format.
@@ -19,9 +17,9 @@ func (assFormat) Name() string { return "ass" }
 
 func (assFormat) Extensions() []string { return []string{".ass", ".ssa"} }
 
-func (assFormat) Decode(r io.Reader) (subtitle.Subtitle, error) {
+func (assFormat) Decode(r io.Reader) (Subtitle, error) {
 	scanner := bufio.NewScanner(r)
-	var events []subtitle.Event
+	var events []Event
 
 	// Track which section we're in
 	inEvents := false
@@ -66,13 +64,13 @@ func (assFormat) Decode(r io.Reader) (subtitle.Subtitle, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return subtitle.Subtitle{}, err
+		return Subtitle{}, err
 	}
 
-	return subtitle.Subtitle{Events: events}, nil
+	return Subtitle{Events: events}, nil
 }
 
-func (assFormat) Encode(w io.Writer, s subtitle.Subtitle) error {
+func (assFormat) Encode(w io.Writer, s Subtitle) error {
 	buf := &bytes.Buffer{}
 
 	// Write script info section
@@ -118,12 +116,12 @@ func parseASSFields(s string) []string {
 }
 
 // parseASSDialogue parses a Dialogue line using the format fields
-func parseASSDialogue(s string, formatFields []string) (subtitle.Event, error) {
+func parseASSDialogue(s string, formatFields []string) (Event, error) {
 	// ASS dialogue has comma-separated fields, but the last field (Text) can contain commas
 	// So we split by comma but limit to len(formatFields) parts
 	parts := strings.SplitN(s, ",", len(formatFields))
 	if len(parts) < len(formatFields) {
-		return subtitle.Event{}, fmt.Errorf("not enough fields in dialogue line")
+		return Event{}, fmt.Errorf("not enough fields in dialogue line")
 	}
 
 	// Build a map of field name -> value
@@ -137,21 +135,21 @@ func parseASSDialogue(s string, formatFields []string) (subtitle.Event, error) {
 	// Parse start time
 	startStr, ok := fieldMap["start"]
 	if !ok {
-		return subtitle.Event{}, fmt.Errorf("missing Start field")
+		return Event{}, fmt.Errorf("missing Start field")
 	}
 	start, err := parseASSTimestamp(startStr)
 	if err != nil {
-		return subtitle.Event{}, err
+		return Event{}, err
 	}
 
 	// Parse end time
 	endStr, ok := fieldMap["end"]
 	if !ok {
-		return subtitle.Event{}, fmt.Errorf("missing End field")
+		return Event{}, fmt.Errorf("missing End field")
 	}
 	end, err := parseASSTimestamp(endStr)
 	if err != nil {
-		return subtitle.Event{}, err
+		return Event{}, err
 	}
 
 	// Get text
@@ -160,7 +158,7 @@ func parseASSDialogue(s string, formatFields []string) (subtitle.Event, error) {
 	text = strings.ReplaceAll(text, "\\N", "\n")
 	text = strings.ReplaceAll(text, "\\n", "\n")
 
-	return subtitle.Event{
+	return Event{
 		Start: start,
 		End:   end,
 		Text:  text,

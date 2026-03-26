@@ -1,4 +1,4 @@
-package formats
+package subgo
 
 import (
 	"bufio"
@@ -8,8 +8,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"subgo/subtitle"
 )
 
 // srtFormat implements the SRT subtitle format.
@@ -19,9 +17,9 @@ func (srtFormat) Name() string { return "srt" }
 
 func (srtFormat) Extensions() []string { return []string{".srt"} }
 
-func (srtFormat) Decode(r io.Reader) (subtitle.Subtitle, error) {
+func (srtFormat) Decode(r io.Reader) (Subtitle, error) {
 	scanner := bufio.NewScanner(r)
-	var events []subtitle.Event
+	var events []Event
 
 	for {
 		// Read index line (ignored)
@@ -46,7 +44,7 @@ func (srtFormat) Decode(r io.Reader) (subtitle.Subtitle, error) {
 		timing := strings.TrimSpace(scanner.Text())
 		start, end, err := parseTimingLine(timing)
 		if err != nil {
-			return subtitle.Subtitle{}, err
+			return Subtitle{}, err
 		}
 
 		// Text lines until blank
@@ -60,7 +58,7 @@ func (srtFormat) Decode(r io.Reader) (subtitle.Subtitle, error) {
 		}
 
 		text := strings.Join(textLines, "\n")
-		events = append(events, subtitle.Event{
+		events = append(events, Event{
 			Start: start,
 			End:   end,
 			Text:  text,
@@ -68,13 +66,13 @@ func (srtFormat) Decode(r io.Reader) (subtitle.Subtitle, error) {
 	}
 
 	if err := scanner.Err(); err != nil {
-		return subtitle.Subtitle{}, err
+		return Subtitle{}, err
 	}
 
-	return subtitle.Subtitle{Events: events}, nil
+	return Subtitle{Events: events}, nil
 }
 
-func (srtFormat) Encode(w io.Writer, s subtitle.Subtitle) error {
+func (srtFormat) Encode(w io.Writer, s Subtitle) error {
 	buf := &bytes.Buffer{}
 	for i, e := range s.Events {
 		fmt.Fprintf(buf, "%d\n", i+1)
