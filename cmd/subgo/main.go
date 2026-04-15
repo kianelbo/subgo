@@ -18,6 +18,7 @@ var (
 	trimLast    int
 	trimBefore  time.Duration
 	trimAfter   time.Duration
+	removeHI    bool
 )
 
 func main() {
@@ -52,6 +53,7 @@ func init() {
 	rootCmd.Flags().IntVar(&trimLast, "trim-last", 0, "remove last n events")
 	rootCmd.Flags().DurationVar(&trimBefore, "trim-before", 0, "remove events before timestamp (e.g., 1m, 1h30m)")
 	rootCmd.Flags().DurationVar(&trimAfter, "trim-after", 0, "remove events after timestamp (e.g., 1h49m30s)")
+	rootCmd.Flags().BoolVar(&removeHI, "remove-hi", false, "remove hearing impaired annotations like (sobbing) or [loud noise]")
 }
 
 func run(cmd *cobra.Command, args []string) error {
@@ -97,6 +99,11 @@ func applyOperations(sub subgo.Subtitle) subgo.Subtitle {
 	// Apply stretch if not 1.0
 	if stretch != 1.0 {
 		sub = sub.Stretch(stretch, 0)
+	}
+
+	// Remove HI annotations if requested
+	if removeHI {
+		sub = sub.RemoveHI()
 	}
 
 	return sub

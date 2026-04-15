@@ -1,6 +1,13 @@
 package subgo
 
-import "time"
+import (
+	"regexp"
+	"strings"
+	"time"
+)
+
+// hiPattern matches HI annotations like (sobbing), [loud noise], #music#, etc.
+var hiPattern = regexp.MustCompile(`\s*(?:[\(\[][^\)\]]*[\)\]]|#[^#]*#)\s*`)
 
 // Event represents a single subtitle cue.
 type Event struct {
@@ -97,6 +104,26 @@ func (s Subtitle) TrimAfter(t time.Duration) Subtitle {
 	for _, e := range s.Events {
 		if e.Start <= t {
 			events = append(events, e)
+		}
+	}
+	return Subtitle{Events: events}
+}
+
+// RemoveHI removes hearing impaired annotations like (sobbing) or [loud noise]
+// from event text. Events that become empty after removal are excluded.
+func (s Subtitle) RemoveHI() Subtitle {
+	var events []Event
+	for _, e := range s.Events {
+		text := hiPattern.ReplaceAllString(e.Text, " ")
+		text = strings.TrimSpace(text)
+		// Collapse multiple spaces into one
+		text = regexp.MustCompile(`\s+`).ReplaceAllString(text, " ")
+		if text != "" {
+			events = append(events, Event{
+				Start: e.Start,
+				End:   e.End,
+				Text:  text,
+			})
 		}
 	}
 	return Subtitle{Events: events}

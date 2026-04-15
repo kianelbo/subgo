@@ -389,7 +389,7 @@ func TestChainedOperations(t *testing.T) {
 func TestImmutability(t *testing.T) {
 	original := Subtitle{
 		Events: []Event{
-			{Start: 1 * time.Second, End: 2 * time.Second, Text: "First"},
+			{Start: 1 * time.Second, End: 2 * time.Second, Text: "First [waving]"},
 		},
 	}
 
@@ -397,11 +397,175 @@ func TestImmutability(t *testing.T) {
 	_ = original.Shift(5*time.Second, true)
 	_ = original.Stretch(2.0, 0)
 	_ = original.TrimFirst(1)
+	_ = original.RemoveHI()
 
 	if original.Events[0].Start != 1*time.Second || original.Events[0].End != 2*time.Second {
-		t.Errorf("original (start = %v, end = %v) was modified", original.Events[0].Start, original.Events[0].End)
+		t.Errorf("original was modified: (start = %v, end = %v)", original.Events[0].Start, original.Events[0].End)
 	}
 	if len(original.Events) != 1 {
-		t.Errorf("original (len = %d) was modified", len(original.Events))
+		t.Errorf("original was modified: (len = %d)", len(original.Events))
+	}
+	if original.Events[0].Text != "First [waving]" {
+		t.Errorf("original text was modified: got %q", original.Events[0].Text)
+	}
+}
+
+func TestRemoveHI(t *testing.T) {
+	tests := []struct {
+		name      string
+		input     Subtitle
+		wantCount int
+		wantTexts []string
+	}{
+		{
+			name: "remove parentheses HI",
+			input: Subtitle{
+				Events: []Event{
+					{Start: 1 * time.Second, End: 2 * time.Second, Text: "(sobbing) I can't believe it"},
+				},
+			},
+			wantCount: 1,
+			wantTexts: []string{"I can't believe it"},
+		},
+		{
+			name: "remove brackets HI",
+			input: Subtitle{
+				Events: []Event{
+					{Start: 1 * time.Second, End: 2 * time.Second, Text: "[loud noise] What was that?"},
+				},
+			},
+			wantCount: 1,
+			wantTexts: []string{"What was that?"},
+		},
+		{
+			name: "remove hash HI",
+			input: Subtitle{
+				Events: []Event{
+					{Start: 1 * time.Second, End: 2 * time.Second, Text: "#gulps# What?!"},
+				},
+			},
+			wantCount: 1,
+			wantTexts: []string{"What?!"},
+		},
+		{
+			name: "remove HI at end",
+			input: Subtitle{
+				Events: []Event{
+					{Start: 1 * time.Second, End: 2 * time.Second, Text: "Hello there (laughing)"},
+				},
+			},
+			wantCount: 1,
+			wantTexts: []string{"Hello there"},
+		},
+		{
+			name: "remove HI in middle",
+			input: Subtitle{
+				Events: []Event{
+					{Start: 1 * time.Second, End: 2 * time.Second, Text: "Hello (sighs) there"},
+				},
+			},
+			wantCount: 1,
+			wantTexts: []string{"Hello there"},
+		},
+		{
+			name: "remove multiple HI annotations",
+			input: Subtitle{
+				Events: []Event{
+					{Start: 1 * time.Second, End: 2 * time.Second, Text: "#sobbing# I can't [door slams] believe it (crying)"},
+				},
+			},
+			wantCount: 1,
+			wantTexts: []string{"I can't believe it"},
+		},
+		{
+			name: "remove event when text becomes empty",
+			input: Subtitle{
+				Events: []Event{
+					{Start: 1 * time.Second, End: 2 * time.Second, Text: "(sobbing)"},
+					{Start: 3 * time.Second, End: 4 * time.Second, Text: "Hello"},
+				},
+			},
+			wantCount: 1,
+			wantTexts: []string{"Hello"},
+		},
+		{
+			name: "remove event with only brackets",
+			input: Subtitle{
+				Events: []Event{
+					{Start: 1 * time.Second, End: 2 * time.Second, Text: "[music playing]"},
+				},
+			},
+			wantCount: 0,
+			wantTexts: []string{},
+		},
+		{
+			name: "preserve text without HI",
+			input: Subtitle{
+				Events: []Event{
+					{Start: 1 * time.Second, End: 2 * time.Second, Text: "Hello, how are you?"},
+				},
+			},
+			wantCount: 1,
+			wantTexts: []string{"Hello, how are you?"},
+		},
+		{
+			name: "empty subtitle",
+			input: Subtitle{
+				Events: []Event{},
+			},
+			wantCount: 0,
+			wantTexts: []string{},
+		},
+		{
+			name: "multiple events mixed",
+			input: Subtitle{
+				Events: []Event{
+					{Start: 1 * time.Second, End: 2 * time.Second, Text: "(music)"},
+					{Start: 3 * time.Second, End: 4 * time.Second, Text: "Hello (laughing) world"},
+					{Start: 5 * time.Second, End: 6 * time.Second, Text: "[silence]"},
+					{Start: 7 * time.Second, End: 8 * time.Second, Text: "Goodbye"},
+				},
+			},
+			wantCount: 2,
+			wantTexts: []string{"Hello world", "Goodbye"},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.input.RemoveHI()
+
+			if len(result.Events) != tt.wantCount {
+				t.Errorf("got %d events, want %d", len(result.Events), tt.wantCount)
+			}
+
+			for i, wantText := range tt.wantTexts {
+				if i < len(result.Events) && result.Events[i].Text != wantText {
+					t.Errorf("event %d: got text %q, want %q", i, result.Events[i].Text, wantText)
+				}
+			}
+		})
+	}
+}
+
+func TestRemoveHIPreservesTimestamps(t *testing.T) {
+	sub := Subtitle{
+		Events: []Event{
+			{Start: 1 * time.Second, End: 2 * time.Second, Text: "(sobbing) Hello"},
+			{Start: 3 * time.Second, End: 4 * time.Second, Text: "World"},
+		},
+	}
+
+	result := sub.RemoveHI()
+
+	if len(result.Events) != 2 {
+		t.Fatalf("expected 2 events, got %d", len(result.Events))
+	}
+
+	if result.Events[0].Start != 1*time.Second || result.Events[0].End != 2*time.Second {
+		t.Errorf("first event timestamps changed: got %v-%v", result.Events[0].Start, result.Events[0].End)
+	}
+	if result.Events[1].Start != 3*time.Second || result.Events[1].End != 4*time.Second {
+		t.Errorf("second event timestamps changed: got %v-%v", result.Events[1].Start, result.Events[1].End)
 	}
 }
