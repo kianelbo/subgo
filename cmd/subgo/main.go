@@ -3,10 +3,11 @@ package main
 import (
 	"fmt"
 	"os"
-	"subgo"
 	"time"
 
 	"github.com/spf13/cobra"
+
+	"github.com/kianelbo/subgo"
 )
 
 var (

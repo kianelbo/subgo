@@ -1,4 +1,4 @@
-module subgo
+module github.com/kianelbo/subgo
 
 go 1.21.0
 
