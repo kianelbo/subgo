@@ -19,7 +19,7 @@ type Format interface {
 var formats = make(map[string]Format)
 
 func init() {
-	for _, f := range []Format{assFormat{}, srtFormat{}} {
+	for _, f := range []Format{assFormat{}, srtFormat{}, vttFormat{}} {
 		for _, ext := range f.Extensions() {
 			formats[normalizeExt(ext)] = f
 		}

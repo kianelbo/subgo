@@ -48,3 +48,4 @@ sub.Save("output.srt")
 ## Supported Formats
 - SRT
 - ASS/SSA
+- WebVTT
