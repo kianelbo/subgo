@@ -105,7 +105,7 @@ func (assFormat) Encode(w io.Writer, s Subtitle) error {
 	return err
 }
 
-// parseASSFields parses the Format line fields
+// parseASSFields parses the Format line fields.
 func parseASSFields(s string) []string {
 	parts := strings.Split(s, ",")
 	fields := make([]string, len(parts))
@@ -115,7 +115,7 @@ func parseASSFields(s string) []string {
 	return fields
 }
 
-// parseASSDialogue parses a Dialogue line using the format fields
+// parseASSDialogue parses a Dialogue line using the format fields.
 func parseASSDialogue(s string, formatFields []string) (Event, error) {
 	// ASS dialogue has comma-separated fields, but the last field (Text) can contain commas
 	// So we split by comma but limit to len(formatFields) parts
@@ -165,7 +165,7 @@ func parseASSDialogue(s string, formatFields []string) (Event, error) {
 	}, nil
 }
 
-// parseASSTimestamp parses ASS timestamp format: H:MM:SS.cc (centiseconds)
+// parseASSTimestamp parses ASS timestamp format: H:MM:SS.cc (centiseconds).
 func parseASSTimestamp(s string) (time.Duration, error) {
 	s = strings.TrimSpace(s)
 
@@ -209,7 +209,7 @@ func parseASSTimestamp(s string) (time.Duration, error) {
 	return d, nil
 }
 
-// formatASSTimestamp formats a duration as ASS timestamp: H:MM:SS.cc
+// formatASSTimestamp formats a duration as ASS timestamp: H:MM:SS.cc (centiseconds).
 func formatASSTimestamp(d time.Duration) string {
 	if d < 0 {
 		d = 0

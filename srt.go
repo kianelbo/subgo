@@ -21,21 +21,16 @@ func (srtFormat) Decode(r io.Reader) (Subtitle, error) {
 	scanner := bufio.NewScanner(r)
 	var events []Event
 
-	for {
+	for scanner.Scan() {
 		// Read index line (ignored)
-		if !scanner.Scan() {
-			break
-		}
+
 		line := strings.TrimSpace(scanner.Text())
 		if line == "" {
 			continue
 		}
 
 		// Try to parse index, but ignore value
-		if _, err := strconv.Atoi(line); err != nil {
-			// not a valid index; try to treat as timing line
-			// this also allows slightly malformed files
-		}
+		strconv.Atoi(line)
 
 		// Timing line
 		if !scanner.Scan() {

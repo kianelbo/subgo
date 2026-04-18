@@ -72,11 +72,7 @@ func TestNormalizeExt(t *testing.T) {
 }
 
 func TestLoadAndSave(t *testing.T) {
-	// Create temp directory
-	tmpDir, err := os.MkdirTemp("", "subgo-test-*")
-	if err != nil {
-		t.Fatalf("failed to create temp dir: %v", err)
-	}
+	tmpDir := t.TempDir()
 	defer os.RemoveAll(tmpDir)
 
 	// Create a test subtitle
