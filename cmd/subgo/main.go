@@ -20,6 +20,7 @@ var (
 	trimBefore  time.Duration
 	trimAfter   time.Duration
 	removeHI    bool
+	removeIds   []uint
 )
 
 func main() {
@@ -55,6 +56,7 @@ func init() {
 	rootCmd.Flags().DurationVar(&trimBefore, "trim-before", 0, "remove events before timestamp (e.g., 1m, 1h30m)")
 	rootCmd.Flags().DurationVar(&trimAfter, "trim-after", 0, "remove events after timestamp (e.g., 1h49m30s)")
 	rootCmd.Flags().BoolVar(&removeHI, "remove-hi", false, "remove hearing impaired annotations like (sobbing) or [loud noise]")
+	rootCmd.Flags().UintSliceVar(&removeIds, "remove-ids", make([]uint, 0), "remove events by comma-separated indices")
 }
 
 func run(cmd *cobra.Command, args []string) error {
@@ -78,6 +80,11 @@ func run(cmd *cobra.Command, args []string) error {
 }
 
 func applyOperations(sub subgo.Subtitle) subgo.Subtitle {
+	// Apply the removes first
+	if len(removeIds) > 0 {
+		sub = sub.RemoveIds(removeIds)
+	}
+
 	// Apply trimming first (before other operations)
 	if trimFirst > 0 {
 		sub = sub.TrimFirst(trimFirst)

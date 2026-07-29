@@ -61,6 +61,22 @@ func (s Subtitle) Stretch(factor float64, anchor time.Duration) Subtitle {
 	return out
 }
 
+// RemoveIds remove events by indices.
+func (s Subtitle) RemoveIds(ids []uint) Subtitle {
+	idSet := make(map[int]struct{}, 0)
+	for _, id := range ids {
+		idSet[int(id)] = struct{}{}
+	}
+
+	var events []Event
+	for i, e := range s.Events {
+		if _, exists := idSet[i+1]; !exists {
+			events = append(events, e)
+		}
+	}
+	return Subtitle{Events: events}
+}
+
 // TrimFirst removes the first n events.
 func (s Subtitle) TrimFirst(n int) Subtitle {
 	if n <= 0 {

@@ -1,6 +1,7 @@
 package subgo
 
 import (
+	"slices"
 	"testing"
 	"time"
 )
@@ -144,6 +145,37 @@ func TestStretch(t *testing.T) {
 				if e.End != tt.wantEnds[i] {
 					t.Errorf("event %d: got end %v, want %v", i, e.End, tt.wantEnds[i])
 				}
+			}
+		})
+	}
+}
+
+func TestRemoveIds(t *testing.T) {
+	sub := Subtitle{
+		Events: []Event{
+			{Start: 1 * time.Second, End: 2 * time.Second, Text: "first"},
+			{Start: 3 * time.Second, End: 4 * time.Second, Text: "second"},
+			{Start: 5 * time.Second, End: 6 * time.Second, Text: "third"},
+		},
+	}
+
+	tests := []struct {
+		name    string
+		indices []uint
+		want    []Event
+	}{
+		{"remove 1", []uint{2}, []Event{sub.Events[0], sub.Events[2]}},
+		{"remove 1,3", []uint{1, 3}, []Event{sub.Events[1]}},
+		{"remove 0", []uint{0}, sub.Events},
+		{"remove 5", []uint{5}, sub.Events},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := sub.RemoveIds(tt.indices)
+
+			if !slices.Equal(result.Events, tt.want) {
+				t.Errorf("got %v events, want %v", result.Events, tt.want)
 			}
 		})
 	}

@@ -27,6 +27,7 @@ subgo <input-file> [flags]
 | `--trim-before` | Remove events before timestamp |
 | `--trim-after` | Remove events after timestamp |
 | `--remove-hi` | Remove hearing impaired annotations |
+| `--remove-ids` | Remove events by comma-separated indices |
 
 #### Example
 
