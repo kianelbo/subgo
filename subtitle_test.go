@@ -166,8 +166,10 @@ func TestRemoveIds(t *testing.T) {
 	}{
 		{"remove 1", []uint{2}, []Event{sub.Events[0], sub.Events[2]}},
 		{"remove 1,3", []uint{1, 3}, []Event{sub.Events[1]}},
+		{"remove 1,1,1", []uint{2, 2, 2}, []Event{sub.Events[0], sub.Events[2]}},
 		{"remove 0", []uint{0}, sub.Events},
 		{"remove 5", []uint{5}, sub.Events},
+		{"no remove", []uint{}, sub.Events},
 	}
 
 	for _, tt := range tests {
