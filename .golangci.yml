@@ -24,7 +24,6 @@ linters:
     - errname
     - errorlint
     - forcetypeassert
-    - goconst
     - gocritic
     - godot
     - godox
