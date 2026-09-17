@@ -8,6 +8,7 @@ import (
 
 // hiPattern matches HI annotations like (sobbing), [loud noise], #music#, etc.
 var hiPattern = regexp.MustCompile(`\s*(?:[\(\[][^\)\]]*[\)\]]|#[^#]*#)\s*`)
+var spacePattern = regexp.MustCompile(`\s+`)
 
 // Event represents a single subtitle cue.
 type Event struct {
@@ -133,7 +134,7 @@ func (s Subtitle) RemoveHI() Subtitle {
 		text := hiPattern.ReplaceAllString(e.Text, " ")
 		text = strings.TrimSpace(text)
 		// Collapse multiple spaces into one
-		text = regexp.MustCompile(`\s+`).ReplaceAllString(text, " ")
+		text = spacePattern.ReplaceAllString(text, " ")
 		if text != "" {
 			events = append(events, Event{
 				Start: e.Start,
