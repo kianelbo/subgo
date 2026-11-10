@@ -14,7 +14,7 @@ jobs:
 
     strategy:
       matrix:
-        go-version: [ '1.23', '1.24', '1.25', '1.26', '1.27' ]
+        go-version: [ '1.24', '1.25', '1.26', '1.27' ]
 
     steps:
     - uses: actions/checkout@v4
@@ -25,7 +25,18 @@ jobs:
         go-version: ${{ matrix.go-version }}
 
     - name: Test
-      run: go test ./... -v
+      run: go test -v -race -coverprofile=coverage.out -covermode=atomic ./...
+
+    - name: Display coverage
+      run: go tool cover -func=coverage.out
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v7
+      with:
+        files: ./coverage.out
+        fail_ci_if_error: true
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
 
   lint:

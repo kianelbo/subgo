@@ -17,7 +17,7 @@ go vet ./...
 gofmt -l .
 ```
 
-CI also uses `golangci-lint` with [.golangci.yml](.golangci.yml). The module targets Go 1.21; the linter configuration targets Go 1.22.
+CI also uses `golangci-lint` with [.golangci.yml](.golangci.yml)
 
 ## Conventions
 

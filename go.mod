@@ -1,6 +1,6 @@
 module github.com/kianelbo/subgo
 
-go 1.21.0
+go 1.24.0
 
 require github.com/spf13/cobra v1.10.2
 
