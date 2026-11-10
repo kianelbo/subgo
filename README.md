@@ -1,6 +1,7 @@
-# subgo
+[![Go Reference](https://pkg.go.dev/badge/github.com/kianelbo/subgo.svg)](https://pkg.go.dev/github.com/kianelbo/subgo)
+[![codecov](https://codecov.io/gh/kianelbo/subgo/branch/main/graph/badge.svg)](https://codecov.io/gh/kianelbo/subgo)
 
-A Go library and CLI for processing subtitle files.
+Subgo is a modern, lightweight Go library and command-line tool for manipulating subtitle files. It provides a simple, consistent API for loading, transforming, and exporting subtitles across multiple formats.
 
 ## Installation
 
@@ -17,7 +18,7 @@ For the CLI, standalone binaries are available [here](https://github.com/kianelb
 subgo <input-file> [flags]
 ```
 
-### Flags
+### Features
 
 | Flag | Description |
 |------|-------------|
