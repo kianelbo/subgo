@@ -26,19 +26,9 @@ func init() {
 	}
 }
 
-// DetectFormat returns a Format based on the filename's extension.
-func DetectFormat(filename string) (Format, error) {
-	ext := normalizeExt(filepath.Ext(filename))
-	format, ok := formats[ext]
-	if !ok {
-		return nil, errors.New("unknown format: " + ext)
-	}
-	return format, nil
-}
-
 // Load reads a subtitle file, detecting format from the filename extension.
 func Load(filename string) (Subtitle, error) {
-	format, err := DetectFormat(filename)
+	format, err := detectFormat(filename)
 	if err != nil {
 		return Subtitle{}, err
 	}
@@ -54,7 +44,7 @@ func Load(filename string) (Subtitle, error) {
 
 // Save writes the subtitle to a file, detecting format from the filename extension.
 func (s Subtitle) Save(filename string) error {
-	format, err := DetectFormat(filename)
+	format, err := detectFormat(filename)
 	if err != nil {
 		return err
 	}
@@ -66,6 +56,15 @@ func (s Subtitle) Save(filename string) error {
 	defer file.Close()
 
 	return format.Encode(file, s)
+}
+
+func detectFormat(filename string) (Format, error) {
+	ext := normalizeExt(filepath.Ext(filename))
+	format, ok := formats[ext]
+	if !ok {
+		return nil, errors.New("unknown format: " + ext)
+	}
+	return format, nil
 }
 
 func normalizeExt(ext string) string {

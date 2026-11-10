@@ -23,7 +23,7 @@ func TestDetectFormatCaseInsensitive(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
-			f, err := DetectFormat(tt.input)
+			f, err := detectFormat(tt.input)
 			if err != nil {
 				t.Fatalf("DetectFormat error: %v", err)
 			}
@@ -35,14 +35,14 @@ func TestDetectFormatCaseInsensitive(t *testing.T) {
 }
 
 func TestDetectFormatUnknown(t *testing.T) {
-	_, err := DetectFormat("test.unknown")
+	_, err := detectFormat("test.unknown")
 	if err == nil {
 		t.Error("expected error for unknown format")
 	}
 }
 
 func TestDetectFormatNoExtension(t *testing.T) {
-	_, err := DetectFormat("testfile")
+	_, err := detectFormat("testfile")
 	if err == nil {
 		t.Error("expected error for file without extension")
 	}
