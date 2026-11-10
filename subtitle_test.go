@@ -512,6 +512,26 @@ func TestRemoveHI(t *testing.T) {
 			wantTexts: []string{"I can't believe it"},
 		},
 		{
+			name: "replace multiple speaker labels with dialogue markers",
+			input: Subtitle{
+				Events: []Event{
+					{Start: 1 * time.Second, End: 2 * time.Second, Text: "Alice: Hello, she said: Goodbye\nBob Smith: (laughing) Good night"},
+				},
+			},
+			wantCount: 1,
+			wantTexts: []string{"- Hello, she said: Goodbye\n- Good night"},
+		},
+		{
+			name: "remove a single speaker label",
+			input: Subtitle{
+				Events: []Event{
+					{Start: 1 * time.Second, End: 2 * time.Second, Text: "Alice: Hello there"},
+				},
+			},
+			wantCount: 1,
+			wantTexts: []string{"Hello there"},
+		},
+		{
 			name: "remove event when text becomes empty",
 			input: Subtitle{
 				Events: []Event{

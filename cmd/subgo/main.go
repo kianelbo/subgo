@@ -55,7 +55,7 @@ func init() {
 	rootCmd.Flags().IntVar(&trimLast, "trim-last", 0, "remove last n events")
 	rootCmd.Flags().DurationVar(&trimBefore, "trim-before", 0, "remove events before timestamp (e.g., 1m, 1h30m)")
 	rootCmd.Flags().DurationVar(&trimAfter, "trim-after", 0, "remove events after timestamp (e.g., 1h49m30s)")
-	rootCmd.Flags().BoolVar(&removeHI, "remove-hi", false, "remove hearing impaired annotations like (sobbing) or [loud noise]")
+	rootCmd.Flags().BoolVar(&removeHI, "remove-hi", false, "remove hearing impaired annotations like (sobbing) and speaker labels")
 	rootCmd.Flags().UintSliceVar(&removeIds, "remove-ids", make([]uint, 0), "remove events by comma-separated indices")
 }
 

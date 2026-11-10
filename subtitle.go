@@ -8,6 +8,7 @@ import (
 
 // hiPattern matches HI annotations like (sobbing), [loud noise], #music#, etc.
 var hiPattern = regexp.MustCompile(`\s*(?:[\(\[][^\)\]]*[\)\]]|#[^#]*#)\s*`)
+var speakerPattern = regexp.MustCompile(`(?m)^[ \t]*[\p{L}\p{M}][\p{L}\p{M}\p{N} ._'’\-]*:[ \t]*`)
 var spacePattern = regexp.MustCompile(`\s+`)
 
 // Event represents a single subtitle cue.
@@ -126,15 +127,29 @@ func (s Subtitle) TrimAfter(t time.Duration) Subtitle {
 	return Subtitle{Events: events}
 }
 
-// RemoveHI removes hearing impaired annotations like (sobbing) or [loud noise]
-// from event text. Events that become empty after removal are excluded.
+// RemoveHI removes hearing impaired annotations like (sobbing) or [loud noise] and
+// speaker labels. Multiple speaker labels in one event are replaced with dialogue markers.
+// Events that become empty after removal are discarded.
 func (s Subtitle) RemoveHI() Subtitle {
 	var events []Event
 	for _, e := range s.Events {
 		text := hiPattern.ReplaceAllString(e.Text, " ")
-		text = strings.TrimSpace(text)
-		// Collapse multiple spaces into one
-		text = spacePattern.ReplaceAllString(text, " ")
+
+		speakerReplacement := " "
+		if len(speakerPattern.FindAllStringIndex(e.Text, -1)) > 1 {
+			speakerReplacement = "- "
+		}
+		text = speakerPattern.ReplaceAllString(text, speakerReplacement)
+		lines := strings.Split(strings.ReplaceAll(text, "\r\n", "\n"), "\n")
+		cleanedLines := make([]string, 0, len(lines))
+		for _, line := range lines {
+			line = strings.TrimSpace(line)
+			line = spacePattern.ReplaceAllString(line, " ")
+			if line != "" {
+				cleanedLines = append(cleanedLines, line)
+			}
+		}
+		text = strings.Join(cleanedLines, "\n")
 		if text != "" {
 			events = append(events, Event{
 				Start: e.Start,
