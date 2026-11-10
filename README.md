@@ -6,7 +6,7 @@ A Go library and CLI for processing subtitle files.
 
 For your go projects:
 ```bash
-go install github.com/kianelbo/subgo/cmd/subgo@latest
+go install github.com/kianelbo/subgo@latest
 ```
 
 For the CLI, standalone binaries are available [here](https://github.com/kianelbo/subgo/releases).
