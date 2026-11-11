@@ -85,6 +85,14 @@ func TestShiftPreservesText(t *testing.T) {
 	}
 }
 
+func TestShiftClampsNegativeStartAndEnd(t *testing.T) {
+	sub := Subtitle{Events: []Event{{Start: 0, End: time.Second, Text: "cue"}}}
+	got := sub.Shift(-2*time.Second, true)
+	if got.Events[0].Start != 0 || got.Events[0].End != 0 {
+		t.Errorf("shifted event = %+v, want both times clamped to zero", got.Events[0])
+	}
+}
+
 func TestStretch(t *testing.T) {
 	sub := Subtitle{
 		Events: []Event{

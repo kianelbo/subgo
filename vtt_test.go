@@ -201,6 +201,37 @@ Styled cue
 	}
 }
 
+func TestVTTDecodeWithRegionAndMalformedCue(t *testing.T) {
+	input := `WEBVTT
+
+REGION
+id:bottom
+width:100%
+
+bad-cue
+not a timing line
+ignored text
+
+good-cue
+00:00:01.000 --> 00:00:02.000
+kept text
+`
+	got, err := (vttFormat{}).Decode(strings.NewReader(input))
+	if err != nil {
+		t.Fatalf("Decode error: %v", err)
+	}
+	if len(got.Events) != 1 || got.Events[0].Text != "kept text" {
+		t.Fatalf("events = %+v, want only the valid cue", got.Events)
+	}
+}
+
+func TestVTTDecodeScannerError(t *testing.T) {
+	input := "WEBVTT\n\n" + strings.Repeat("x", 70*1024)
+	if _, err := (vttFormat{}).Decode(strings.NewReader(input)); err == nil {
+		t.Fatal("expected an error for an overlong cue line")
+	}
+}
+
 func TestVTTDecodeEmptyFile(t *testing.T) {
 	format := vttFormat{}
 	_, err := format.Decode(strings.NewReader(""))
@@ -214,6 +245,12 @@ func TestVTTDecodeInvalidHeader(t *testing.T) {
 	_, err := format.Decode(strings.NewReader("NOT A VTT FILE\n"))
 	if err == nil {
 		t.Error("expected error for invalid header")
+	}
+}
+
+func TestVTTFormatName(t *testing.T) {
+	if got := (vttFormat{}).Name(); got != "vtt" {
+		t.Errorf("Name() = %q, want %q", got, "vtt")
 	}
 }
 
@@ -339,6 +376,13 @@ func TestVTTTimestampParsingErrors(t *testing.T) {
 		"00:00:00,000", // wrong separator (comma instead of dot)
 		"invalid",
 		"00.000", // only seconds
+		"x:00.000",
+		"00:x.000",
+		"x:00:00.000",
+		"00:x:00.000",
+		"00:00:x.000",
+		"00:00:00.x",
+		"00:00:00:00.000",
 	}
 
 	for _, input := range tests {
@@ -411,6 +455,9 @@ func TestVTTTimingLineParsingErrors(t *testing.T) {
 		"",
 		"00:00:01.000",                 // missing arrow and end
 		"00:00:01.000 -> 00:00:02.000", // wrong arrow
+		"00:00:01.000 -->",
+		"bad --> 00:00:02.000",
+		"00:00:01.000 --> bad",
 	}
 
 	for _, input := range tests {

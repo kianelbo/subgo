@@ -257,6 +257,10 @@ func TestASSTimestampParsingErrors(t *testing.T) {
 		"0:00:00,00", // wrong separator
 		"invalid",
 		"00:00.00", // missing hours
+		"x:00:00.00",
+		"0:x:00.00",
+		"0:00:x.00",
+		"0:00:00.x",
 	}
 
 	for _, input := range tests {
@@ -341,6 +345,27 @@ func TestASSDialogueParsing(t *testing.T) {
 			}
 			if event.Text != tt.wantText {
 				t.Errorf("text = %q, want %q", event.Text, tt.wantText)
+			}
+		})
+	}
+}
+
+func TestASSDialogueParsingErrors(t *testing.T) {
+	tests := []struct {
+		name   string
+		fields []string
+		input  string
+	}{
+		{"too few fields", []string{"start", "end", "text"}, "0:00:01.00"},
+		{"missing start field", []string{"end", "text"}, "0:00:02.00,hello"},
+		{"invalid start timestamp", []string{"start", "end", "text"}, "bad,0:00:02.00,hello"},
+		{"missing end field", []string{"start", "text"}, "0:00:01.00,hello"},
+		{"invalid end timestamp", []string{"start", "end", "text"}, "0:00:01.00,bad,hello"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if _, err := parseASSDialogue(tt.input, tt.fields); err == nil {
+				t.Error("expected a dialogue parsing error")
 			}
 		})
 	}

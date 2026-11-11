@@ -174,6 +174,10 @@ func TestSBVTimestampParsingErrors(t *testing.T) {
 		"invalid",
 		"0:00.000",
 		"0:00:00.000.000",
+		"x:00:00.000",
+		"0:x:00.000",
+		"0:00:x.000",
+		"0:00:00.x",
 	}
 
 	for _, input := range tests {
@@ -201,6 +205,8 @@ func TestSBVTimingLineParsingErrors(t *testing.T) {
 		"",
 		"0:00:01.000",
 		"0:00:01.000,0:00:02.000,0:00:03.000",
+		"invalid,0:00:02.000",
+		"0:00:01.000,invalid",
 	}
 
 	for _, input := range tests {

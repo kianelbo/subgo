@@ -2,6 +2,7 @@ package subgo
 
 import (
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"io"
 	"strconv"
@@ -24,7 +25,7 @@ func (ttmlFormat) Decode(r io.Reader) (Subtitle, error) {
 
 	for {
 		token, err := decoder.Token()
-		if err == io.EOF {
+		if errors.Is(err, io.EOF) {
 			break
 		}
 		if err != nil {
@@ -79,7 +80,7 @@ func readTTMLText(decoder *xml.Decoder) (string, error) {
 	for depth > 0 {
 		token, err := decoder.Token()
 		if err != nil {
-			if err == io.EOF {
+			if errors.Is(err, io.EOF) {
 				return "", fmt.Errorf("unexpected end of TTML paragraph")
 			}
 			return "", err

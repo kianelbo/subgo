@@ -35,6 +35,8 @@ func TestTTMLDecode(t *testing.T) {
 func TestTTMLDecodeSkipsMalformedCue(t *testing.T) {
 	input := `<tt><body><div>
 <p begin="invalid" end="00:00:02.000">ignored</p>
+<p begin="00:00:01.000">missing end and duration</p>
+<p begin="00:00:01.000" dur="invalid">invalid duration</p>
 <p begin="00:00:02.000" end="00:00:03.000">kept</p>
 </div></body></tt>`
 	got, err := (ttmlFormat{}).Decode(strings.NewReader(input))
@@ -74,9 +76,29 @@ func TestTTMLEncodeAndRoundTrip(t *testing.T) {
 	}
 }
 
+func TestTTMLEncodeEmpty(t *testing.T) {
+	var output bytes.Buffer
+	if err := (ttmlFormat{}).Encode(&output, Subtitle{}); err != nil {
+		t.Fatalf("Encode error: %v", err)
+	}
+	got, err := (ttmlFormat{}).Decode(&output)
+	if err != nil {
+		t.Fatalf("Decode error: %v", err)
+	}
+	if len(got.Events) != 0 {
+		t.Errorf("decoded %d events from empty subtitle, want none", len(got.Events))
+	}
+}
+
 func TestTTMLDecodeInvalidXML(t *testing.T) {
 	if _, err := (ttmlFormat{}).Decode(strings.NewReader(`<tt><p>`)); err == nil {
 		t.Error("expected an error for malformed XML")
+	}
+	if _, err := (ttmlFormat{}).Decode(strings.NewReader(`<tt><p begin="1s" end="2s">&invalid;</p></tt>`)); err == nil {
+		t.Error("expected an error for malformed XML inside a cue")
+	}
+	if _, err := (ttmlFormat{}).Decode(strings.NewReader(`<tt><div></tt>`)); err == nil {
+		t.Error("expected an error for malformed XML outside a cue")
 	}
 }
 
@@ -89,6 +111,9 @@ func TestTTMLTimeParsing(t *testing.T) {
 		{"01:02:03.004", time.Hour + 2*time.Minute + 3004*time.Millisecond},
 		{"1.5s", 1500 * time.Millisecond},
 		{"250ms", 250 * time.Millisecond},
+		{"1m", time.Minute},
+		{"1h", time.Hour},
+		{"00:00:00.123456789", 123456789 * time.Nanosecond},
 	}
 	for _, tt := range tests {
 		t.Run(tt.input, func(t *testing.T) {
@@ -98,6 +123,30 @@ func TestTTMLTimeParsing(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("parseTTMLTime(%q) = %v, want %v", tt.input, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestTTMLTimeParsingErrors(t *testing.T) {
+	tests := []string{
+		"",
+		"invalid",
+		"invalids",
+		"xx:00:01",
+		"00:xx:01",
+		"00:00:xx",
+		"00:60:00",
+		"00:00:60",
+		"00:00:01.",
+		"00:00:01.1234567890",
+		"00:00:01.abc",
+		"00:00:01.2.3",
+	}
+	for _, input := range tests {
+		t.Run(input, func(t *testing.T) {
+			if _, err := parseTTMLTime(input); err == nil {
+				t.Errorf("parseTTMLTime(%q) succeeded, want error", input)
 			}
 		})
 	}

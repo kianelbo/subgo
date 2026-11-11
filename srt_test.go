@@ -93,6 +93,17 @@ Second
 	}
 }
 
+func TestSRTDecodeTrailingIncompleteCue(t *testing.T) {
+	input := "1\n00:00:01,000 --> 00:00:02,000\nKept cue\n\n2\n"
+	got, err := (srtFormat{}).Decode(strings.NewReader(input))
+	if err != nil {
+		t.Fatalf("Decode error: %v", err)
+	}
+	if len(got.Events) != 1 || got.Events[0].Text != "Kept cue" {
+		t.Fatalf("events = %+v, want the complete cue retained", got.Events)
+	}
+}
+
 func TestSRTEncode(t *testing.T) {
 	sub := Subtitle{
 		Events: []Event{
@@ -211,6 +222,10 @@ func TestSRTTimestampParsingErrors(t *testing.T) {
 		"invalid",
 		"00:00,000",    // missing seconds
 		"00:00:00:000", // wrong separator
+		"xx:00:00,000",
+		"00:xx:00,000",
+		"00:00:xx,000",
+		"00:00:00,xxx",
 	}
 
 	for _, input := range tests {
@@ -302,6 +317,8 @@ func TestSRTTimingLineParsingErrors(t *testing.T) {
 		"",
 		"00:00:01,000",                 // missing arrow and end
 		"00:00:01,000 -> 00:00:02,000", // wrong arrow
+		"bad --> 00:00:02,000",
+		"00:00:01,000 --> bad",
 	}
 
 	for _, input := range tests {
