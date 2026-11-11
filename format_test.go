@@ -18,6 +18,8 @@ func TestDetectFormatCaseInsensitive(t *testing.T) {
 		{"test.ssA", "ass"},
 		{"dir/test.SRT", "srt"},
 		{"test.SBV", "sbv"},
+		{"test.TTML", "ttml"},
+		{"test.xml", "ttml"},
 		{"../testsrt.SRt", "srt"},
 	}
 
